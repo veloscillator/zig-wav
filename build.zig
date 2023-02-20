@@ -7,7 +7,7 @@ pub fn build(b: *std.build.Builder) void {
 
         const test_step = b.step("test", "Run library tests");
 
-        for ([_][]const u8{ "src/sample.zig", "src/wav.zig" }) |test_file| {
+        inline for ([_][]const u8{ "src/sample.zig", "src/wav.zig" }) |test_file| {
             const t = b.addTest(test_file);
             t.setBuildMode(mode);
             test_step.dependOn(&t.step);
@@ -20,7 +20,7 @@ pub fn build(b: *std.build.Builder) void {
 
     const test_step = b.step("test", "Run library tests");
 
-    for ([_][]const u8{ "src/sample.zig", "src/wav.zig" }) |test_file| {
+    inline for ([_][]const u8{ "src/sample.zig", "src/wav.zig" }) |test_file| {
         const t = b.addTest(.{
             .root_source_file = .{ .path = test_file },
             .target = target,
