@@ -4,17 +4,40 @@ Simple, efficient wav decoding + encoding in Zig.
 
 ![CI](https://github.com/veloscillator/zig-wav/actions/workflows/build.yml/badge.svg)
 
+
 ## Features
 
 - Read and write wav files.
-- Focus on performance and flexibility.
 - Convert samples to desired type while reading to avoid extra steps.
+- Focus on performance and flexibility.
 - Fail gracefully on bad input.
 
 
 ## Usage
 
-Add `TODO` to your `build.zig`.
+`zig-wav` may require a recent nightly build of Zig.
+
+Add `zig-wav` to your `build.zig.zon`:
+```zig
+.{
+    .name = "your-project",
+    .version = "0.0.1",
+    .dependencies = .{
+        .wav = .{
+            .url = "https://github.com/veloscillator/zig-wav/archive/<LATEST GIT COMMIT ID>.tar.gz",
+            .hash = "<SHA2 HASH>",
+        }
+    },
+}
+```
+`zig build` will tell you the right sha2 if you guess wrong.
+
+Add to your `build.zig`:
+```zig
+const wav_mod = b.dependency("wav", .{ .target = target, .optimize = optimize }).module("wav");
+exe.addModule("wav", "wav_mod");
+```
+
 
 ### Decoding
 
@@ -32,11 +55,11 @@ pub fn main() !void {
     var data: [64]f32 = undefined;
     while (true) {
         // Read samples as f32. Channels are interleaved.
-        const bytes_read = try decoder.read(f32, &data);
+        const samples_read = try decoder.read(f32, &data);
 
         // < ------ Do something with samples in data. ------ >
 
-        if (bytes_read < data.len) {
+        if (samples_read < data.len) {
             break;
         }
     }
@@ -85,6 +108,13 @@ fn generateSine(sample_rate: f32, data: []f32) void {
 
 ## Demo
 
+See `zig-soundio` for a playable demo (currently Window/macOS only):
+```bash
+git clone --recurse https://github.com/veloscillator/zig-soundio.git
+cd zig-soundio
+zig build demo-wav -- path/to/file.wav
+```
+
 
 ## Future Work
 
@@ -93,5 +123,4 @@ fn generateSine(sample_rate: f32, data: []f32) void {
 - [ ] Add dithering option to deal with quantization error.
 - [ ] Compile to big-endian target.
 - [ ] Handle big-endian wav files.
-- [ ] Provide metadata while decoding by reading `LIST`, `INFO`, other chunks.
-- [ ] Allow encoding of metadata via `LIST` and `INFO` chunks.
+- [ ] Encode/decode metadata via `LIST`, `INFO`, etc. chunks.

@@ -6,7 +6,7 @@ const expectError = std.testing.expectError;
 
 const bad_type = "sample type must be u8, i16, i24, or f32";
 
-fn readFloat(comptime T: type, reader: anytype) !f32 {
+fn readFloat(comptime T: type, reader: anytype) !T {
     var f: T = undefined;
     try reader.readNoEof(std.mem.asBytes(&f));
     return f;
@@ -347,8 +347,7 @@ pub fn encoder(
     sample_rate: usize,
     channels: usize,
 ) !Encoder(T, @TypeOf(writer), @TypeOf(seekable)) {
-    return Encoder(T, @TypeOf(writer), @TypeOf(seekable))
-        .init(writer, seekable, sample_rate, channels);
+    return Encoder(T, @TypeOf(writer), @TypeOf(seekable)).init(writer, seekable, sample_rate, channels);
 }
 
 test "pcm(bits=8) sample_rate=22050 channels=1" {
