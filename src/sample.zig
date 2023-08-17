@@ -13,9 +13,9 @@ pub fn convert(comptime T: type, value: anytype) T {
 
     // PCM uses unsigned 8-bit ints instead of signed. Special case.
     if (S == u8) {
-        return convert(T, @bitCast(i8, value -% 128));
+        return convert(T, @as(i8, @bitCast(value -% 128)));
     } else if (T == u8) {
-        return @bitCast(u8, convert(i8, value)) +% 128;
+        return @as(u8, @bitCast(convert(i8, value))) +% 128;
     }
 
     return switch (S) {
@@ -36,8 +36,8 @@ pub fn convert(comptime T: type, value: anytype) T {
 fn convertFloatToInt(comptime T: type, value: anytype) T {
     const S = @TypeOf(value);
 
-    const min = comptime @intToFloat(S, std.math.minInt(T));
-    const max = comptime @intToFloat(S, std.math.maxInt(T));
+    const min = comptime @as(S, @floatFromInt(std.math.minInt(T)));
+    const max = comptime @as(S, @floatFromInt(std.math.maxInt(T)));
 
     // Need lossyCast instead of @floatToInt because float representation of max/min T may be
     // out of range.
@@ -46,7 +46,7 @@ fn convertFloatToInt(comptime T: type, value: anytype) T {
 
 fn convertIntToFloat(comptime T: type, value: anytype) T {
     const S = @TypeOf(value);
-    return 1.0 / (1.0 + @intToFloat(T, std.math.maxInt(S))) * @intToFloat(T, value);
+    return 1.0 / (1.0 + @as(T, @floatFromInt(std.math.maxInt(S)))) * @as(T, @floatFromInt(value));
 }
 
 fn convertSignedInt(comptime T: type, value: anytype) T {
@@ -60,7 +60,7 @@ fn convertSignedInt(comptime T: type, value: anytype) T {
         return @as(T, value) << shift;
     } else if (src_bits > dst_bits) {
         const shift = src_bits - dst_bits;
-        return @intCast(T, value >> shift);
+        return @as(T, @intCast(value >> shift));
     }
 
     comptime std.debug.assert(S == T);
