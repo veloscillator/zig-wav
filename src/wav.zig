@@ -44,7 +44,7 @@ const FormatChunk = packed struct {
         switch (self.code) {
             .pcm, .ieee_float, .extensible => {},
             else => {
-                std.log.debug("unsupported format code {x}", .{@enumToInt(self.code)});
+                std.log.debug("unsupported format code {x}", .{@intFromEnum(self.code)});
                 return error.Unsupported;
             },
         }
@@ -191,14 +191,14 @@ pub fn Decoder(comptime InnerReaderType: type) type {
                     else => std.debug.panic("invalid decoder state, unexpected fmt bits {}", .{self.fmt.bits}),
                 },
                 .ieee_float => self.readInternal(f32, T, buf),
-                else => std.debug.panic("invalid decoder state, unexpected fmt code {}", .{@enumToInt(self.fmt.code)}),
+                else => std.debug.panic("invalid decoder state, unexpected fmt code {}", .{@intFromEnum(self.fmt.code)}),
             };
         }
 
         fn readInternal(self: *Self, comptime S: type, comptime T: type, buf: []T) Error!usize {
             var reader = self.counting_reader.reader();
 
-            const limit = std.math.min(buf.len, self.remaining());
+            const limit = @min(buf.len, self.remaining());
             var i: usize = 0;
             while (i < limit) : (i += 1) {
                 buf[i] = sample.convert(
@@ -275,11 +275,11 @@ pub fn Encoder(
                         f32 => .ieee_float,
                         else => @compileError(bad_type),
                     },
-                    .channels = @intCast(u16, channels),
-                    .sample_rate = @intCast(u32, sample_rate),
-                    .bytes_per_second = @intCast(u32, bytes_per_second),
-                    .block_align = @intCast(u16, channels * bits / 8),
-                    .bits = @intCast(u16, bits),
+                    .channels = @as(u16, @intCast(channels)),
+                    .sample_rate = @as(u32, @intCast(sample_rate)),
+                    .bytes_per_second = @as(u32, @intCast(bytes_per_second)),
+                    .block_align = @as(u16, @intCast(channels * bits / 8)),
+                    .bits = @as(u16, @intCast(bits)),
                 },
             };
 
@@ -321,7 +321,7 @@ pub fn Encoder(
             }
 
             try self.writer.writeAll("RIFF");
-            try self.writer.writeIntLittle(u32, @intCast(u32, header_size + self.data_size)); // Overwritten by finalize().
+            try self.writer.writeIntLittle(u32, @as(u32, @intCast(header_size + self.data_size))); // Overwritten by finalize().
             try self.writer.writeAll("WAVE");
 
             try self.writer.writeAll("fmt ");
@@ -329,7 +329,7 @@ pub fn Encoder(
             try self.writer.writeStruct(self.fmt);
 
             try self.writer.writeAll("data");
-            try self.writer.writeIntLittle(u32, @intCast(u32, self.data_size));
+            try self.writer.writeIntLittle(u32, @as(u32, @intCast(self.data_size)));
         }
 
         /// Must be called once writing is complete. Writes total size to file header.
@@ -498,7 +498,7 @@ fn testEncodeDecode(comptime T: type, comptime sample_rate: usize) !void {
     const twopi = std.math.pi * 2.0;
     const freq = 440.0;
     const secs = 3;
-    const increment = freq / @intToFloat(f32, sample_rate) * twopi;
+    const increment = freq / @as(f32, @floatFromInt(sample_rate)) * twopi;
 
     var buf = try std.testing.allocator.alloc(u8, sample_rate * @bitSizeOf(T) / 8 * (secs + 1));
     defer std.testing.allocator.free(buf);
